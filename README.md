@@ -1,6 +1,11 @@
 # openvpn_mgmt_serializer
 Serialize telnet sessions for openvpn management interface
 
+0.  install the dependencies
+
+```
+bundle install
+```
 
 1. configure the `$ovpn_host` and `$ovpen_port` management interface data.
 
