@@ -27,3 +27,12 @@ consumer = Thread.new do
       puts ovpn.kill :host => value[:host], :port => value[:port]
     end
 end
+
+
+
+Process.daemon(true,true) 
+pid_file = "#{__FILE__}.pid" 
+File.open(pid_file, 'w') { |f| f.write Process.pid } 
+
+
+
