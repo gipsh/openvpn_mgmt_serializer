@@ -1,3 +1,4 @@
+require 'rubygems'
 require 'sinatra'
 require 'thread'
 require 'openvpn_management'
@@ -19,12 +20,13 @@ end
 
 consumer = Thread.new do
     puts "Starting the worker...."
-    ovpn = OpenvpnManagement.new :host => $ovpn_host, :port => $ovpn_port
 
     loop do
       value = queue.pop
+      ovpn = OpenvpnManagement.new :host => $ovpn_host, :port => $ovpn_port
       puts "consumed #{value}"
       puts ovpn.kill :host => value[:host], :port => value[:port]
+      ovpn.destroy
     end
 end
 
