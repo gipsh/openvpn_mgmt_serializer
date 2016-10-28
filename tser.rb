@@ -1,3 +1,4 @@
+require 'rubygems'
 require 'sinatra'
 require 'thread'
 require 'openvpn_management'
