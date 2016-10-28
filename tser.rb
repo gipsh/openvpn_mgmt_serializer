@@ -4,11 +4,11 @@ require 'openvpn_management'
 $ovpn_host = 'localhost'
 $ovpn_port = 8888
 
-
+# sinatra settings
+set :bind, '0.0.0.0'
+set :port, 9090
 
 queue = Queue.new
-
-set :port, 9090
 
 get '/kill' do
   queue << params 
@@ -29,7 +29,7 @@ consumer = Thread.new do
     end
 end
 
-
+# demonize and write pidfile 
 
 Process.daemon(true,true) 
 pid_file = "#{__FILE__}.pid" 
