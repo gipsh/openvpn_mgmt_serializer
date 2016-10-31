@@ -1,6 +1,8 @@
 require 'sinatra'
 require 'thread'
 require 'openvpn_management'
+require 'logger'
+
 $ovpn_host = 'localhost'
 $ovpn_port = 8888
 
@@ -13,18 +15,19 @@ queue = Queue.new
 get '/kill' do
   queue << params 
   length = queue.size
-  #printf 'QUEUE LENGTH %d', length
-  'Message Received'
+#  printf 'QUEUE LENGTH %d', length
+  'OK'
 end
 
 consumer = Thread.new do
     puts "Starting the worker...."
+    log = Logger.new('tser.log')
 
     loop do
       value = queue.pop
       ovpn = OpenvpnManagement.new :host => $ovpn_host, :port => $ovpn_port
-      puts "consumed #{value}"
-      puts ovpn.kill :host => value[:host], :port => value[:port]
+      log.info "consumed #{value}"
+      log.info ovpn.kill :host => value[:host], :port => value[:port]
       ovpn.destroy
     end
 end
