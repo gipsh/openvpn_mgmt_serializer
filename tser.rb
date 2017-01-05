@@ -14,27 +14,32 @@ queue = Queue.new
 
 get '/kill' do
   queue << params 
-  length = queue.size
-#  printf 'QUEUE LENGTH %d', length
+  puts "Queue size: #{queue.size}"
   'OK'
 end
 
 consumer = Thread.new do
     puts "Starting the worker...."
     log = Logger.new('tser.log')
+    log.level = Logger::INFO
 
     loop do
       value = queue.pop
-      ovpn = OpenvpnManagement.new :host => $ovpn_host, :port => $ovpn_port
       log.info "consumed #{value}"
-      log.info ovpn.kill :host => value[:host], :port => value[:port]
-      ovpn.destroy
+
+      begin
+        ovpn = OpenvpnManagement.new :host => $ovpn_host, :port => $ovpn_port
+        log.info ovpn.kill :host => value[:host], :port => value[:port]
+        ovpn.destroy
+      rescue
+	log.info "OpenVPN not running at #{$ovpn_host}:#{$ovpn_port}..."
+      end
     end
 end
 
 # demonize and write pidfile 
 
-Process.daemon(true,true) 
+#Process.daemon(true,true) 
 pid_file = "#{__FILE__}.pid" 
 File.open(pid_file, 'w') { |f| f.write Process.pid } 
 
