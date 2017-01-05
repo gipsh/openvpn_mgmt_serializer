@@ -6,6 +6,8 @@ require 'logger'
 $ovpn_host = 'localhost'
 $ovpn_port = 8888
 
+$log_file = 'path/tser.log'
+
 # sinatra settings
 set :bind, '0.0.0.0'
 set :port, 9090
@@ -18,9 +20,15 @@ get '/kill' do
   'OK'
 end
 
+post '/kill' do
+  queue << params 
+  puts "Queue size: #{queue.size}"
+  'OK'
+end
+
 consumer = Thread.new do
     puts "Starting the worker...."
-    log = Logger.new('tser.log')
+    log = Logger.new($log_file)
     log.level = Logger::INFO
 
     loop do
