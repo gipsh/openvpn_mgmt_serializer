@@ -19,52 +19,67 @@ $mutex = Mutex.new
 
 get '/kill' do
   $queue << params 
-  puts "Queue size: #{$queue.size}"
+  #puts "Queue size: #{$queue.size}"
   'OK'
 end
 
 post '/kill' do
   $queue << params 
-  puts "Queue size: #{$queue.size}"
+  #puts "Queue size: #{$queue.size}"
   'OK'
 end
 
 
 get '/status' do
- 
+  log = Logger.new($log_file)
+  log.level = Logger::INFO
+
+  $ovpn = nil
   status = nil
   $mutex.synchronize do
      begin
+	log.info "OpenVPN execute GET /status"
         $ovpn = OpenvpnManagement.new :host => $ovpn_host, :port => $ovpn_port
         status = $ovpn.status
-	puts status
         $ovpn.destroy
-      rescue
-        puts "OpenVPN not running at #{$ovpn_host}:#{$ovpn_port}..."
+      rescue Exception => msg
+        log.info "OpenVPN not running at #{$ovpn_host}:#{$ovpn_port}... for GET /status"
+        log.info msg
+        if !$ovpn.nil?
+            log.info "Destroy OpenVPN... for GET /status"
+            $ovpn.destroy
+        end
       end
     end
-  status
+  if !status.nil?
+    status.to_s
+  end
 end
 
 consumer = Thread.new do
-    puts "Starting the worker...."
     log = Logger.new($log_file)
     log.level = Logger::INFO
-
+    #log.info "Starting the worker - kill session...."
+	
     loop do
       value = $queue.pop
       log.info "consumed #{value}"
+      $ovpn = nil
 
       $mutex.synchronize do
         begin
           $ovpn = OpenvpnManagement.new :host => $ovpn_host, :port => $ovpn_port
           log.info $ovpn.kill :host => value[:host], :port => value[:port]
           $ovpn.destroy
-        rescue
-    	  log.info "OpenVPN not running at #{$ovpn_host}:#{$ovpn_port}..."
+        rescue Exception => msg
+          log.info "OpenVPN not running at #{$ovpn_host}:#{$ovpn_port}... for PUT /kill"
+	  log.info msg
+          if !$ovpn.nil?
+            log.info "Destroy OVPN... for PUT /kill"
+            $ovpn.destroy
+          end
         end
       end
-
     end
 end
 
